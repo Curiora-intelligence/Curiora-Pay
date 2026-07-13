@@ -1,5 +1,4 @@
-import pandas as pd
-import numpy as np
+import pandas as pd,os
 from sklearn.linear_model import LogisticRegression
 import pickle # To save the trained model
 import warnings
@@ -12,19 +11,19 @@ data = {
 }
 
 df = pd.DataFrame(data)
-print("--- 🧠 TRAINING DATA ---")
 print(df)
 
 X = df[['balance', 'txn_count']]
 y = df['loan_approved']          
 
-print("\n🤖 Training Logistic Regression Model...")
 model = LogisticRegression()
 model.fit(X, y)
 
-
-# with open('loan_model.pkl', 'wb') as f:
-#     pickle.dump(model, f)
+if not os.path.exists("loan_model.pkl"):
+    with open('loan_model.pkl', 'wb') as f:
+        pickle.dump(model, f)
+else:
+    print("model already exist")
 
 print("✅ Model Trained & Saved as 'loan_model.pkl'")
 
@@ -33,9 +32,9 @@ def test_user(bal, txns):
     prob = model.predict_proba([[bal, txns]])[0][1] 
     
     if prediction[0] == 1:
-         status = "APPROVED ✅"
+         status = "APPROVED"
     else:
-         status="REJECTED ❌"
+         status="REJECTED"
     print(f"User (Bal: {bal}, Txns: {txns}) -> {status} (Confidence: {int(prob*100)}%)")
 
 print("\n--- 🧪 TEST RESULTS ---")
