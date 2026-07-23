@@ -14,4 +14,3 @@ app.include_router(authentication.auth_router) # Include the auth_router from ro
 
 # DASHBOARD ROUTE
 app.include_router(dashboard.dashboard_router) # Include the dashboard_router from routers/dashboard.py
-print(a:=10==10)
