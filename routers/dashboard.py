@@ -56,6 +56,7 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                 return templates.TemplateResponse(request,'homepage.html', {
                 "user_name": username,
                 "total_balance": balance,
+                "account_number": account_number,
                 "transactions": formatted_transactions
                 })
     except Exception as e:
@@ -113,8 +114,8 @@ def apply_loan(request: Request,user_id:str=Depends(get_current_user)):
     return templates.TemplateResponse(request,"loan-form.html", {"status":status,"message":message,"user_data":user_data})
 
 @dashboard_router.get("/download-satatement-form")
-def statement(request:Request,date_filter:str="hellooo"):
-    return "hello"
+def statement(request:Request,date_filter:str=None,userid=Depends(get_current_user)):
+    return bank_engine.Bank.download_statement(userid)
 
 @dashboard_router.get("/transaction-history", response_class=HTMLResponse)
 def transaction_history(request:Request):

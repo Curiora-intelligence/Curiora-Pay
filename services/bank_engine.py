@@ -65,7 +65,7 @@ class Bank:
                     cursor.execute("SELECT * FROM users")
                     d=cursor.fetchall()
                     return d
-        except Exception as e:
+        except:
             return "Error occured while editing the profile"
 
     def deposit_amount(self, amount:int):
@@ -94,8 +94,8 @@ class Bank:
                         # here the zero refferes to NULL value 
                         return True, f"Deposited ₹{amount:.2f} successfully!. New balance: ₹{balance}"
         
-            except Exception as e:
-                return False, f"System error. No money was deposited {str(e)}."
+            except :
+                return False, "System error. No money was deposited."
  
     def withdraw_amount(self, amount:int):
             if amount < 1:
@@ -127,8 +127,8 @@ class Bank:
                         # here the zero refferes to NULL valuse 
                         return True, f"Successfully withdrew ₹{amount:.2f}. New balance: ₹{balance}"
         
-            except Exception as e:
-                return False, f"System error. No money was withdrawed {str(e)}."
+            except:
+                return False, "System error. No money was withdrawed."
             
         
     def transfer(self,receiver_acc,amount,note,method):
@@ -174,8 +174,8 @@ class Bank:
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)''', 
                             (Bank.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,note,"completed"))
                         return True, f"Successfully transferred ₹{amount} to {receiver_name}."
-            except Exception as e:
-                return False, f"System error. No money was transferred {str(e)}."
+            except:
+                return False, "System error. No money was transferred."
 
     def apply_for_loan(self):
         try:
@@ -211,7 +211,7 @@ class Bank:
                     df = pd.read_sql_query(query, con,params=(test_acc[0],test_acc[0]))
                     return "Statement ✅ succsessfully downloaded"
         except:
-            return f"Error occured while downloading the statement"
+            return "Error occured while downloading the statement"
         
     
 class Loans(Bank):
@@ -250,5 +250,5 @@ class Openaccount(Bank):
                     return acc_num, today_date
         except sql.IntegrityError:
             return sql.IntegrityError()
-        except Exception as e:
-            return e
+        except:
+            return "An error occured while creating account"

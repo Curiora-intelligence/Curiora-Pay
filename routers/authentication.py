@@ -63,8 +63,8 @@ def login(request: Request, userid: str = Form(...), password: str = Form(...), 
                 request.session["user_id"] = userid 
                 return RedirectResponse(url='/dashboard/', status_code=303)
 
-    except Exception as e:
-        return f"An internal server error occurred while logging in: {str(e)}"
+    except :
+        return f"An internal server error occurred while logging in"
 # Logout route
 @auth_router.get("/logout")
 def logout(request: Request):

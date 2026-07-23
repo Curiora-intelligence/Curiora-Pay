@@ -1,6 +1,6 @@
 # import asyncio
-import psycopg as sql # Note: This is Psycopg 3, which supports native async
-import os
+import psycopg as sql,pandas as pd # Note: This is Psycopg 3, which supports native async
+import os,asyncio
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 async def setup_database_async():
@@ -40,7 +40,5 @@ async def setup_database_async():
         ''')
         
     await con.close()
-# with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
-#     with con.cursor() as cursor:
-#         cursor.execute("SELECT version();")
-#         print(cursor.fetchone()[0])
+asyncio.run(setup_database_async())
+print("Database tables created successfully!")

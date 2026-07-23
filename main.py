@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from starlette.middleware.sessions import SessionMiddleware
 
-app = FastAPI()
+app = FastAPI(title="saiganesh",version="0.139.0")
 app.mount("/static", staticfiles.StaticFiles(directory="static"), name="static")
 load_dotenv()
 app.add_middleware(SessionMiddleware,secret_key=os.getenv("secret_key"))
@@ -14,4 +14,4 @@ app.include_router(authentication.auth_router) # Include the auth_router from ro
 
 # DASHBOARD ROUTE
 app.include_router(dashboard.dashboard_router) # Include the dashboard_router from routers/dashboard.py
-
+print(a:=10==10)
