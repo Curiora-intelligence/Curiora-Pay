@@ -47,7 +47,7 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                         "type": tx_type,
                         "counterparty": counterparty,
                         "amount": f"{sign}₹{row[6]}",
-                        "note": bank_engine.Bank.decrypt_str(row[9]) if row[9] else "No note",
+                        "note": bank_engine.Bank.decrypt_str(row[9]),
                         "status": row[7],
                         "date": str(row[8])[:16],
                         "method": row[10]
