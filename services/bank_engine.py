@@ -148,6 +148,8 @@ class Bank:
             
         
     def transfer(self,receiver_acc,amount,note,method) -> tuple[bool,str]:
+            if not note:
+                note="No note"
             if amount <= 0:
                 return False, "Transfer amount must be greater than zero."
             try:
