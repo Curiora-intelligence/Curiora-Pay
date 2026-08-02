@@ -1,395 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sai Ganesh Bank</title>
-    <style>
-        :root {
-            --bg: #eef4fb;
-            --surface: #ffffff;
-            --primary: #1f4b8f;
-            --secondary: #5134a0;
-            --accent: #fb8b24;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --success: #10b981;
-            --danger: #ef4444;
-            --radius: 20px;
-            --shadow: 0 24px 80px rgba(31, 75, 143, 0.12);
-        }
+{% extends "base.html" %}
+{% block title %}Dashboard — Sai Ganesh Bank{% endblock %}
 
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(circle at top left, rgba(79,70,229,0.12), transparent 35%),
-                        radial-gradient(circle at bottom right, rgba(16,185,129,0.12), transparent 28%),
-                        var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-        }
-
-        .screen {
-            width: 100%;
-            max-width: 1120px;
-            background: var(--surface);
-            border-radius: calc(var(--radius) + 8px);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            min-height: 640px;
-        }
-
-        .dashboard {
-            padding: 32px;
-            display: grid;
-            gap: 24px;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-
-        .topbar h2 {
-            margin: 0;
-            font-size: 2rem;
-        }
-
-        .btn {
-            text-decoration: none;
-            display: inline-block;
-            cursor: pointer;
-            border: none;
-            border-radius: 14px;
-            padding: 14px 18px;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: transform 0.2s ease, background-color 0.2s ease;
-        }
-
-        .btn:hover { transform: translateY(-1px); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: #f3f4f6; color: var(--text); }
-
-        .account-summary {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
-        }
-
-        .summary-card {
-            background: linear-gradient(135deg, #1f4b8f 0%, #2963c6 100%);
-            color: white;
-            padding: 28px;
-            border-radius: var(--radius);
-            min-height: 180px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .summary-card small { opacity: 0.9; }
-        .summary-card h3 { margin: 0 0 12px; font-size: 1rem; color: rgba(255,255,255,0.78); }
-        .summary-card .value { font-size: 2.5rem; margin: 0; }
-
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 18px;
-        }
-
-        .action-card {
-            background: var(--surface);
-            border: 1px solid #e5e7eb;
-            border-radius: var(--radius);
-            padding: 22px;
-            text-align: center;
-            text-decoration: none;
-            color: inherit;
-            cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease;
-            display: block;
-        }
-
-        .action-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(31, 75, 143, 0.25);
-        }
-
-        .action-card span {
-            display: inline-block;
-            margin-bottom: 14px;
-            font-size: 1.75rem;
-        }
-        
-        .action-card h4 { margin: 0; font-size: 1.05rem; }
-
-        .history-section {
-            background: var(--surface);
-            border: 1px solid #e5e7eb;
-            border-radius: var(--radius);
-            padding: 24px;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 18px;
-        }
-
-        /* FIXED: Forced to Flex Column so it stacks vertically */
-        .transaction-list {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            width: 100%;
-        }
-
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            border-radius: 16px;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-        }
-
-        .transaction-meta {
-            display: grid;
-            gap: 4px;
-        }
-
-        .transaction-type { font-weight: 700; }
-        .transaction-amount { font-size: 1.05rem; font-weight: bold; }
-        .transaction-date { color: var(--muted); font-size: 0.95rem; }
-
-        .status-pill {
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            display: inline-block;
-        } 
-
-        /* FIXED: Cleaned up duplicates */
-        .status-success { background: rgba(16,185,129,0.12); color: var(--success); }
-        .status-fail { background: rgba(239,68,68,0.12); color: var(--danger); }
-
-        .text-green { color: var(--success) !important; }
-        .text-dark { color: var(--text) !important; }
-
-        /* --- 3-DOT MENU STYLING --- */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropbtn {
-            background-color: white;
-            color: var(--text);
-            font-size: 24px;
-            font-weight: bold;
-            border: 1px solid #e5e7eb;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dropbtn:hover {
-            background-color: #f8fafc;
-            border-color: rgba(31, 75, 143, 0.25);
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: var(--surface);
-            min-width: 160px;
-            box-shadow: 0 10px 30px rgba(31, 75, 143, 0.15);
-            border-radius: 12px;
-            z-index: 10;
-            overflow: hidden;
-            border: 1px solid #e5e7eb;
-            margin-top: 5px;
-        }
-
-        .dropdown-content a {
-            color: var(--text);
-            padding: 14px 16px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f4f9ff;
-            color: var(--primary);
-        }
-
-        .show {
-            display: block;
-        }
-
-        @media (max-width: 900px) {
-            .account-summary { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <div class="screen">
-        <section class="dashboard">
-            
-            <div class="topbar">
-                <div>
-                    <p style="color: var(--muted); margin: 0;">Welcome back,</p>
-                    <h2>{{ user_name }}</h2>
-                </div>
-                
-                <div class="dropdown">
-                    <button class="dropbtn" onclick="toggleMenu()">⋮</button>
-                    
-                    <div id="settingsMenu" class="dropdown-content">
-                        <a href="/edit-profile"><span>⚙️</span> Edit Profile</a>
-                         <a href="/contact-form"><span>📞</span> Contact Us</a>
-                        <div style="border-top: 1px solid #e5e7eb; margin: 4px 0;"></div>
-                        <a href="/logout" style="color: var(--danger);"><span>🚪</span> Logout</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="account-summary">
-                <div class="summary-card">
-                    <small>Total Balance</small>
-                    <p class="value">₹ {{ total_balance }}</p>
-                    <p>Current active balance</p>
-                </div>
-                <div class="summary-card" style="background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);">
-                    <small>Account Number</small>
-                    <p class="value" style="font-size: 2rem; margin-top: 10px;">{{ account_number }}</p>
-                    <p>Primary Checking</p>
-                </div>
-                <div class="summary-card" style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);">
-                    <small>AI Loan Status</small>
-                    <p class="value" style="font-size: 1.8rem; margin-top: 10px;">{{ loan_status }}</p>
-                    <p>Based on ML activity analysis.</p>
-                </div>
-            </div>
-
-            <div class="action-grid">
-                <a href="/dashboard/deposit" class="action-card">
-                    <span>💰</span>
-                    <h4>Deposit funds</h4>
-                    <p style="color: var(--muted); font-size: 0.9rem;">Top up instantly.</p>
-                </a>
-                <a href="/dashboard/withdraw-money-form" class="action-card">
-                    <span>🏧</span>
-                    <h4>Withdraw cash</h4>
-                    <p style="color: var(--muted); font-size: 0.9rem;">Secure withdrawal.</p>
-                </a>
-                <a href="/dashboard/transfer-money-form" class="action-card">
-                    <span>↔️</span>
-                    <h4>Transfer money</h4>
-                    <p style="color: var(--muted); font-size: 0.9rem;">Send to others.</p>
-                </a>
-                <a href="/dashboard/apply-loan" class="action-card">
-                    <span>🤖</span>
-                    <h4>AI Loan</h4>
-                    <p style="color: var(--muted); font-size: 0.9rem;">Run ML approval.</p>
-                </a>
-                <a href="/dashboard/analytics" class="action-card">
-                    <span>📊</span>
-                    <h4>Analytics</h4>
-                    <p style="color: var(--muted); font-size: 0.9rem;">View your financial insights.</p>
-                </a>
-            </div>
-
-            <section class="history-section">
-                <div class="history-header">
-                    <div class="history-appear">
-                        <h3 style="margin: 0;">Recent transactions</h3>
-                        <p style="color: var(--muted); margin: 4px 0 0;">Your latest banking activity.</p>
-                    </div>
-                    <div class="download-history">
-                        <a href="/dashboard/download-satatement-form" class="btn btn-secondary">Download Statement</a>
-                    </div>
-                </div>
-                
-                <div class="transaction-list">
-                    {% for tx in transactions %}
-                    <div class="transaction-item">
-                        
-                        <div class="transaction-meta">
-                            <div class="transaction-type">
-                                {{ tx.type }} <span style="font-weight: normal; color: var(--muted);">| {{ tx.counterparty }}</span>
-                            </div>
-                            
-                            <div class="transaction-date">
-                                {{ tx.date }} &bull; {{ tx.method }}
-                            </div>
-                            
-                            <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">
-                                📝 {{ tx.note }} <br>
-                                <span style="font-size: 0.75rem;">Ref: {{ tx.transactionid }}</span>
-                            </div>
-                        </div>
-                        
-                        <div style="text-align: right;">
-                            <div class="transaction-amount {% if tx.type == 'Received' %}text-green{% else %}text-dark{% endif %}">
-                                {{ tx.amount }}
-                            </div>
-                            <div class="status-pill {% if tx.status == 'failed' %}status-fail{% else %}status-success{% endif %}" style="margin-top: 8px;">
-                                {{ tx.status }}
-                            </div>
-                        </div>
-
-                    </div> {% else %}
-                    <p style="color: var(--muted); text-align: center; padding: 20px;">No transactions found.</p>
-                    {% endfor %}
-                </div>
-            </section>
-
-        </section>
+{% block content %}
+<main class="page-shell">
+  <nav class="topbar glass">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <span>Sai Ganesh Bank</span>
     </div>
 
-    <script>
-        function toggleMenu() {
-            document.getElementById("settingsMenu").classList.toggle("show");
-        }
+    <div class="menu">
+      <button class="btn" onclick="toggleMenu()" aria-label="Open account menu">•••</button>
+      <div id="settingsMenu" class="menu-content glass">
+        <a href="/edit-profile">Edit Profile</a>
+        <a href="/contact-form">Contact Us</a>
+        <a href="/logout" class="danger">Logout</a>
+      </div>
+    </div>
+  </nav>
 
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropbtn')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+  <header class="hero">
+    <p class="eyebrow">Intelligent Banking</p>
+    <h1>Good to see you,<br>{{ user_name }}.</h1>
+    <p>Your money, transactions and intelligent banking tools — brought together in one calm workspace.</p>
+  </header>
+
+  <section class="dashboard-grid">
+    <article class="balance-card glass">
+      <div>
+        <div class="balance-label">Total Balance</div>
+        <div class="balance">₹ {{ total_balance }}</div>
+      </div>
+      <div class="balance-footer">
+        <div>
+          <div class="balance-label">Primary account</div>
+          <div class="account-number">{{ account_number }}</div>
+        </div>
+        <span>Available balance</span>
+      </div>
+    </article>
+
+    <article class="side-card glass">
+      <div class="ai-orb">✦</div>
+      <div>
+        <p class="eyebrow">AI Loan Assessment</p>
+        <h3>{{ loan_status }}</h3>
+        <p style="color:var(--muted);line-height:1.55;margin-bottom:0">Machine-learning assisted eligibility based on your account activity.</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="actions">
+    <a href="/dashboard/deposit" class="action-card glass"><div class="action-icon">＋</div><strong>Deposit</strong><small>Add funds</small></a>
+    <a href="/dashboard/withdraw-money-form" class="action-card glass"><div class="action-icon">↓</div><strong>Withdraw</strong><small>Take out funds</small></a>
+    <a href="/dashboard/transfer-money-form" class="action-card glass"><div class="action-icon">↗</div><strong>Transfer</strong><small>Send money</small></a>
+    <a href="/dashboard/apply-loan" class="action-card glass"><div class="action-icon">✦</div><strong>AI Loan</strong><small>Assess eligibility</small></a>
+    <a href="/dashboard/analytics" class="action-card glass"><div class="action-icon">⌁</div><strong>Analytics</strong><small>Financial insights</small></a>
+  </section>
+
+  <section class="history glass">
+    <div class="history-head">
+      <div>
+        <p class="eyebrow">Activity</p>
+        <h2>Recent transactions</h2>
+      </div>
+      <a href="/dashboard/download-satatement-form" class="btn">Download statement</a>
+    </div>
+
+    <div class="tx-list">
+      {% for tx in transactions %}
+      <article class="tx">
+        <div>
+          <div class="tx-title">{{ tx.type }} <span style="color:var(--muted);font-weight:500">· {{ tx.counterparty }}</span></div>
+          <div class="tx-sub">{{ tx.date }} · {{ tx.method }}</div>
+          <div class="tx-note">{{ tx.note }} · Ref {{ tx.transactionid }}</div>
+        </div>
+        <div class="tx-amount">
+          {{ tx.amount }}
+          <div class="status">{{ tx.status }}</div>
+        </div>
+      </article>
+      {% else %}
+      <div class="tx" style="display:block;text-align:center;color:var(--muted)">No transactions yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleMenu() {
+  document.getElementById("settingsMenu").classList.toggle("show");
+}
+window.addEventListener("click", function(event) {
+  if (!event.target.closest(".menu")) {
+    document.getElementById("settingsMenu")?.classList.remove("show");
+  }
+});
+</script>
+{% endblock %}

@@ -1,4 +1,3 @@
-# import asyncio
 import psycopg as sql,pandas as pd # Note: This is Psycopg 3, which supports native async
 import os,asyncio
 from dotenv import load_dotenv
@@ -32,7 +31,7 @@ async def setup_database_async():
                 receiver_acc TEXT NOT NULL,
                 receiver_username TEXT NOT NULL,
                 amount NUMERIC(15, 2) NOT NULL,
-                status TEXT DEFAULT 'failed',
+                status TEXT DEFAULT 'pending',
                 date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
                 note TEXT DEFAULT 'NULL',
                 method TEXT DEFAULT 'internal_transfer'
@@ -40,5 +39,5 @@ async def setup_database_async():
         ''')
         
     await con.close()
-asyncio.run(setup_database_async())
-print("Database tables created successfully!")
+# asyncio.run(setup_database_async())
+# print("Database tables created successfully!")

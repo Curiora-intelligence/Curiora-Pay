@@ -1,8 +1,13 @@
 import psycopg as sql
 from enum import Enum
 import secrets,string,uuid,os,pickle,numpy as np,pandas as pd,warnings
+from argon2 import PasswordHasher
+from cryptography.fernet import Fernet
 from datetime import datetime
+from dotenv import load_dotenv
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
+load_dotenv()
+encrypt=Fernet(os.getenv("encrypt_key"))
 
 try:
     with open('loan_model.pkl', 'rb') as f:#loading the model 
@@ -24,9 +29,20 @@ class Bank:
         self.userid = userid
 
     @staticmethod
-    def transactionid(): #this function is for transactionid generation
+    def transactionid() ->str: #this function is for transactionid generation
         return str(uuid.uuid4())
-    
+    @staticmethod
+    def encrypt_str(note:str) ->str:
+        if note is None:
+            raise TypeError(" the note should not be NoneType")
+        return encrypt.encrypt(note.encode()).decode()
+    @staticmethod
+    def decrypt_str(byte:str) ->str:
+        if byte is None:
+            raise TypeError(" the note should not be NoneType")
+        return encrypt.decrypt(byte.encode()).decode()
+
+
     @staticmethod
     def transaction_history(account_number,date=None,amount=None,transaction_type=None,status=None):
         with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
@@ -49,12 +65,12 @@ class Bank:
                         "type": tx_type,
                         "counterparty": counterparty,
                         "amount": f"{sign}₹{row[6]}",
-                        "note": row[9] if row[9] else "No note",
+                        "note": Bank.decrypt_str(row[9]) if row[9] else "No note",
                         "status": row[7],
                         "date": str(row[8])[:16],
                         "method": row[10]
                     })
-                    return formatted_transactions
+                return formatted_transactions
         
         
 
@@ -66,9 +82,9 @@ class Bank:
                     d=cursor.fetchall()
                     return d
         except:
-            return "Error occured while editing the profile"
+            return "An internal system error occured while editing the profile"
 
-    def deposit_amount(self, amount:int):
+    def deposit_amount(self, amount:int) ->tuple[bool,str]:
             if amount < 1:
                 return False, "Minimum deposit is ₹1."
             try:
@@ -90,14 +106,14 @@ class Bank:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (Bank.transactionid(), "Cash Deposit","0", sender_acc,user_name, amount, "internal_transfer", "Self Deposit", "completed"))
+                            ''', (Bank.transactionid(),"Cash Deposite","0",sender_acc,user_name, amount, "internal_transfer", Bank.encrypt_str("Self Deposit"), "completed"))
                         # here the zero refferes to NULL value 
                         return True, f"Deposited ₹{amount:.2f} successfully!. New balance: ₹{balance}"
         
             except :
-                return False, "System error. No money was deposited."
+                return False, f"An internal system error occured. No money was deposited."
  
-    def withdraw_amount(self, amount:int):
+    def withdraw_amount(self, amount:int) ->tuple[bool,str]:
             if amount < 1:
                 return False, "Minimum withdrawal is ₹1."
             try:
@@ -123,15 +139,15 @@ class Bank:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (Bank.transactionid(), user_name, sender_acc, "0", "ATM Withdrawal", amount, "atm", "Self Withdrawal", "completed"))
+                            ''', (Bank.transactionid(), user_name, sender_acc,"0","ATM Withdrawal",amount,"atm",Bank.encrypt_str("ATM Withdrawal"), "completed"))
                         # here the zero refferes to NULL valuse 
                         return True, f"Successfully withdrew ₹{amount:.2f}. New balance: ₹{balance}"
         
             except:
-                return False, "System error. No money was withdrawed."
+                return False, "An internal system error occured. No money was withdrawed."
             
         
-    def transfer(self,receiver_acc,amount,note,method):
+    def transfer(self,receiver_acc,amount,note,method) -> tuple[bool,str]:
             if amount <= 0:
                 return False, "Transfer amount must be greater than zero."
             try:
@@ -158,7 +174,7 @@ class Bank:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (Bank.transactionid(), sender_name, sender_acc, receiver_acc, receiver_name, amount, method, note, "failed"))
+                            ''', (Bank.transactionid(), sender_name, sender_acc, receiver_acc, receiver_name, amount, method, Bank.encrypt_str(note), "failed"))
                             return False, "Insufficient funds. Please check your balance."
 
                         #EXECUTE THE TRANSFER SAFELY
@@ -172,12 +188,12 @@ class Bank:
                         cursor.execute('''INSERT INTO transactions 
                            (transactionid,sender_username, sender_acc, receiver_acc, receiver_username, amount,method,note ,status) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)''', 
-                            (Bank.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,note,"completed"))
+                            (Bank.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,Bank.encrypt_str(note),"completed"))
                         return True, f"Successfully transferred ₹{amount} to {receiver_name}."
             except:
-                return False, "System error. No money was transferred."
+                return False, "An internal system error occured. No money was transferred."
 
-    def apply_for_loan(self):
+    def apply_for_loan(self) ->tuple[bool,str]:
         try:
             with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
@@ -199,23 +215,23 @@ class Bank:
                     else:
                         return False, "failed you can't get loan",None
         except:
-            return False,"System error when approving loan"
+            return False,"An internal system error occured when approving loan"
 
     def download_statement(self):
         try:
-            with sql.connect(dbname="mybankdb",user="saiganeshsattenapalli",host="localhost",port="5432") as con:
+            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
-                    cursor.execute("SELECT account_number FROM users WHERE userid = %s",("saiganesh",))
+                    cursor.execute("SELECT account_number FROM users WHERE userid = %s",(self.userid,))
                     test_acc=cursor.fetchone()
                     query=f'''SELECT * FROM transactions WHERE sender_acc= %s OR  receiver_acc= %s'''
                     df = pd.read_sql_query(query, con,params=(test_acc[0],test_acc[0]))
                     return "Statement ✅ succsessfully downloaded"
         except:
-            return "Error occured while downloading the statement"
+            return "An internal system error occured while downloading the statement"
         
     
 class Loans(Bank):
-    def __init__(self, userid, balance1):
+    def __init__(self, userid:str, balance1:int):
         self.userid = userid
         self.balance1 = balance1
         self.interest_rate = 0.05
@@ -224,31 +240,34 @@ class Loans(Bank):
         try:
             interest1 = self.interest_rate * self.balance1
             total = interest1 + self.balance1
-            print(f"📈 Total amount with 5% Interest: ₹{total}")
+            return total
         except:
-            print("Error occured while calculating intrest")
+            return "An internal system error occured"
 
 class Openaccount(Bank):
-    def __init__(self, Username, Userid, Password,Balance1=0):
+    def __init__(self, Username:str, Userid:str, Password:str,Balance1:int=0):
         self.Username = Username
         self.Userid=Userid
         self.Password = Password
         self.Balance1=Balance1
 
     @staticmethod
-    def accountnum(): #this function is for account number generation
+    def accountnum()->str: #this function is for account number generation
         return "".join(secrets.SystemRandom().choices(string.digits,k=10))
-        
+    
+    def password_hash(self) ->str:
+        return PasswordHasher().hash(self.Password)
+       
     def open_account(self):
         acc_num = Openaccount.accountnum()
         try:
             with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
                     cursor.execute("INSERT INTO users (username, userid, password, account_number,balance) VALUES ( %s, %s, %s, %s, %s)", 
-                       (self.Username,self.Userid, self.Password, acc_num,self.Balance1))
+                       (self.Username,self.Userid, self.password_hash(), acc_num,self.Balance1))
                     today_date = datetime.now().strftime("%B %d, %Y")
                     return acc_num, today_date
         except sql.IntegrityError:
             return sql.IntegrityError()
         except:
-            return "An error occured while creating account"
+            return "An internal system error occured while creating account"

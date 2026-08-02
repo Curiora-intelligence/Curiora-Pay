@@ -28,7 +28,7 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                 cursor.execute("SELECT username, balance, account_number FROM users WHERE userid = %s", (user_id,))
                 user_data = cursor.fetchone()
                 username, balance, account_number = user_data
-
+                
                 cursor.execute("SELECT * FROM transactions WHERE sender_acc= %s OR receiver_acc= %s ORDER BY date DESC LIMIT 5" ,(account_number,account_number))
                 raw_transactions = cursor.fetchall()
 
@@ -47,7 +47,7 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                         "type": tx_type,
                         "counterparty": counterparty,
                         "amount": f"{sign}₹{row[6]}",
-                        "note": row[9] if row[9] else "No note",
+                        "note": bank_engine.Bank.decrypt_str(row[9]) if row[9] else "No note",
                         "status": row[7],
                         "date": str(row[8])[:16],
                         "method": row[10]
@@ -59,8 +59,8 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                 "account_number": account_number,
                 "transactions": formatted_transactions
                 })
-    except Exception as e:
-        return f"Database error: {str(e)}"
+    except Exception as a:
+        return f"Error occured while loading dashboard {str(a)}"
 
 
 

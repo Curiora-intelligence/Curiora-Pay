@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form,Header
 from fastapi.responses import HTMLResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
 from services.bank_engine import Openaccount
 import psycopg as sql,os,string,secrets
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 def cap(): #this function is for captcha generation
     return "".join(secrets.SystemRandom().choices(string.digits + string.ascii_letters,k=6))
@@ -51,19 +53,29 @@ def login(request: Request, userid: str = Form(...), password: str = Form(...), 
         
         with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:#database connection
             with con.cursor() as cursor:
-                cursor.execute("SELECT userid FROM users WHERE userid = %s AND password = %s", (userid, password))
-                user_data = cursor.fetchone()
-                if not user_data:
+                cursor.execute("SELECT password FROM users WHERE userid = %s", (userid,))
+                hash_password = cursor.fetchone()
+                if not hash_password:
                     new_captcha = cap() 
                     return templates.TemplateResponse(request,'login-form.html', {
                                             "captcha": new_captcha, 
-                                            "error": "Invalid User ID or Password."})
-        
-                # Give the VIP wristband and redirect to Dashboard!
-                request.session["user_id"] = userid 
-                return RedirectResponse(url='/dashboard/', status_code=303)
+                                            "error": "Invalid User ID"})
+                try:
+                    PasswordHasher().verify(hash_password[0],password)
+                    # Give the VIP wristband and redirect to Dashboard!
+                    request.session["user_id"] = userid 
+                    return RedirectResponse(url='/dashboard/', status_code=303)
+                
+                except VerifyMismatchError:
+                    new_captcha=cap()
+                    return templates.TemplateResponse(request,'login-form.html', {
+                                            "captcha": new_captcha, 
+                                            "error": "Invalid Password"})
+                except:
+                    return "An internal server error occurred while checking login details"
 
-    except :
+
+    except:
         return f"An internal server error occurred while logging in"
 # Logout route
 @auth_router.get("/logout")
@@ -80,4 +92,5 @@ def contact_form(request:Request):
 @auth_router.post("/contact",response_class=HTMLResponse)
 def contact(request:Request,name:str=Form(...), age:int=Form(None), email:str=Form(None), num:str=Form(None), info:str=Form(None)):
     ip=request.headers.get("User-Agent")
+    print(Header())
     return templates.TemplateResponse(request,"contact.html",{"name":name,"age":age, "email-id":email, "mobile-num":num, "issue":info,"ip":ip})
