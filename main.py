@@ -1,9 +1,7 @@
 from fastapi import FastAPI,staticfiles
 from dotenv import load_dotenv
 load_dotenv()
-import routers.authentication as authentication,routers.dashboard as dashboard
-import os
-from dotenv import load_dotenv
+import routers.authentication as authentication,routers.dashboard as dashboard,os
 from starlette.middleware.sessions import SessionMiddleware
 
 app = FastAPI(title="saiganesh",version="0.139.0",docs_url=None,redoc_url=None,openapi_url=None)

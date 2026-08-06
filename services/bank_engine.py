@@ -45,7 +45,7 @@ class Bank:
 
     @staticmethod
     def transaction_history(account_number,date=None,amount=None,transaction_type=None,status=None):
-        with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+        with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
             with con.cursor() as cursor:
                 cursor.execute("select * from transactions WHERE sender_acc= %s OR receiver_acc= %s order by date desc limit 100",(account_number,account_number))
                 transactions=cursor.fetchall()
@@ -79,8 +79,8 @@ class Bank:
             with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
                     cursor.execute("SELECT * FROM users")
-                    d=cursor.fetchall()
-                    return d
+                    df=cursor.fetchall()
+                    return df
         except:
             return "An internal system error occured while editing the profile"
 
@@ -89,7 +89,7 @@ class Bank:
                 return False, "Minimum deposit is ₹1."
             try:
                 #databse connection
-                with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+                with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                     with con.cursor() as cursor:
 
                         #updating the balance
@@ -118,7 +118,7 @@ class Bank:
                 return False, "Minimum withdrawal is ₹1."
             try:
                 # Execute the withdrawal
-                with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+                with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                     with con.cursor() as cursor:
 
                          #updating the balance
@@ -153,7 +153,7 @@ class Bank:
             if amount <= 0:
                 return False, "Transfer amount must be greater than zero."
             try:
-                with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+                with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                     with con.cursor() as cursor:
                         cursor.execute("SELECT account_number, balance, username FROM users WHERE userid = %s", (self.userid,))
                         sender_data = cursor.fetchone()
@@ -197,7 +197,7 @@ class Bank:
 
     def apply_for_loan(self) ->tuple[bool,str]:
         try:
-            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
                     cursor.execute("SELECT balance, account_number FROM users WHERE userid = %s",(self.userid,))
                     user_data=cursor.fetchone()
@@ -221,12 +221,13 @@ class Bank:
 
     def download_statement(self):
         try:
-            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
                     cursor.execute("SELECT account_number FROM users WHERE userid = %s",(self.userid,))
                     test_acc=cursor.fetchone()
                     query=f'''SELECT * FROM transactions WHERE sender_acc= %s OR  receiver_acc= %s'''
                     df = pd.read_sql_query(query, con,params=(test_acc[0],test_acc[0]))
+                    df.to_csv(f"{self.userid}.csv")
                     return "Statement ✅ succsessfully downloaded"
         except:
             return "An internal system error occured while downloading the statement"
@@ -263,7 +264,7 @@ class Openaccount(Bank):
     def open_account(self):
         acc_num = Openaccount.accountnum()
         try:
-            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+            with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
                     cursor.execute("INSERT INTO users (username, userid, password, account_number,balance) VALUES ( %s, %s, %s, %s, %s)", 
                        (self.Username,self.Userid, self.password_hash(), acc_num,self.Balance1))

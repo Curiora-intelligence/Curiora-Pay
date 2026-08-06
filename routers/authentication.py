@@ -50,8 +50,8 @@ def login(request: Request, userid: str = Form(...), password: str = Form(...), 
             return templates.TemplateResponse(request,'login-form.html', {
                                         "captcha": new_captcha, 
                                         "error": "Security Verification Failed Due To Incorrect Captcha." })
-        
-        with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:#database connection
+        #database connection
+        with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
             with con.cursor() as cursor:
                 cursor.execute("SELECT password FROM users WHERE userid = %s", (userid,))
                 hash_password = cursor.fetchone()
@@ -76,7 +76,7 @@ def login(request: Request, userid: str = Form(...), password: str = Form(...), 
 
 
     except:
-        return f"An internal server error occurred while logging in"
+        return "An internal server error occurred while logging in"
 # Logout route
 @auth_router.get("/logout")
 def logout(request: Request):

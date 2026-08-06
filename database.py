@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 async def setup_database_async():
     # Establish an asynchronous connection
-    con = await sql.AsyncConnection.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port"),autocommit=True)
+    con = await sql.AsyncConnection.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port"),autocommit=True)
     
     # Create an async cursor
     async with con.cursor() as cursor:
@@ -33,7 +33,7 @@ async def setup_database_async():
                 amount NUMERIC(15, 2) NOT NULL,
                 status TEXT DEFAULT 'pending',
                 date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                note TEXT DEFAULT 'NULL',
+                note TEXT,
                 method TEXT DEFAULT 'internal_transfer'
             )
         ''')

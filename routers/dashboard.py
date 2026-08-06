@@ -23,7 +23,7 @@ templates=Jinja2Templates(directory="templates")
 @dashboard_router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request,user_id:str=Depends(get_current_user)):
     try:
-        with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
+        with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
             with con.cursor() as cursor:
                 cursor.execute("SELECT username, balance, account_number FROM users WHERE userid = %s", (user_id,))
                 user_data = cursor.fetchone()
@@ -59,8 +59,8 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                 "account_number": account_number,
                 "transactions": formatted_transactions
                 })
-    except Exception as a:
-        return f"Error occured while loading dashboard {str(a)}"
+    except :
+        return "Error occured while loading dashboard"
 
 
 
@@ -115,7 +115,7 @@ def apply_loan(request: Request,user_id:str=Depends(get_current_user)):
 
 @dashboard_router.get("/download-satatement-form")
 def statement(request:Request,date_filter:str=None,userid=Depends(get_current_user)):
-    return bank_engine.Bank.download_statement(userid)
+    return HTMLResponse(bank_engine.Bank(userid).download_statement())
 
 @dashboard_router.get("/transaction-history", response_class=HTMLResponse)
 def transaction_history(request:Request):
