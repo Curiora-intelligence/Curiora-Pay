@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Request, Form, Depends,HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from services import bank_engine
 import psycopg as sql,os
+from fastapi.templating import Jinja2Templates
 
 # 1. THE BOUNCER: Checks the VIP wristband (cookie) authorization
-def get_current_user(request: Request):
+def get_current_user(request:Request):
+    """Returns userid if they have session else None and redirect to home page"""
+
     user_id = request.session.get("user_id")
     if not user_id:
         # Kicks them to login if they aren't authenticated
@@ -13,15 +15,15 @@ def get_current_user(request: Request):
     return user_id
 
 # 2. THE SUB-PANEL: Create the secure zone
-dashboard_router = APIRouter(
-    prefix="/dashboard",
-    dependencies=[Depends(get_current_user)]
-)
+dashboard_router = APIRouter(prefix="/dashboard",dependencies=[Depends(get_current_user)])
 templates=Jinja2Templates(directory="templates")
 
 #DASHBOARD ROUTE
 @dashboard_router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request,user_id:str=Depends(get_current_user)):
+    """
+    it fetchas user credentials and returns HTMLresponse
+    """
     try:
         with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
             with con.cursor() as cursor:
