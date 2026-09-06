@@ -7,6 +7,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi.templating import Jinja2Templates
 
+
 def cap(request:Request): #this function is for captcha generation
     captcha= "".join(secrets.SystemRandom().choices(string.digits + string.ascii_letters,k=6))
     request.session['captcha']=captcha

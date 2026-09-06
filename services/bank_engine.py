@@ -43,7 +43,6 @@ class Bank:
         return encrypt.decrypt(byte.encode()).decode()
 
 
-    @staticmethod
     def transaction_history(account_number,date=None,amount=None,transaction_type=None,status=None):
         with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
             with con.cursor() as cursor:
