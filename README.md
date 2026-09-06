@@ -91,6 +91,4 @@ The model analyzes two primary factors:
 
 Using a Logistic Regression model trained via `scikit-learn`, it calculates the probability of loan repayment and automatically approves or rejects the application.
 
-## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
