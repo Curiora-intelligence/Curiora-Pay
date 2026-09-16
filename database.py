@@ -15,9 +15,11 @@ async def setup_database_async():
                 userid TEXT PRIMARY KEY,
                 password TEXT NOT NULL,
                 account_number TEXT UNIQUE NOT NULL,
-                balance NUMERIC(15, 2) DEFAULT 0.00,
-                date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                cibil_score INTEGER DEFAULT -1
+                balance NUMERIC(15, 2) not null DEFAULT 0.00,
+                date TIMESTAMPTZ not null DEFAULT CURRENT_TIMESTAMP,
+                cibil_score INTEGER not null DEFAULT -1,
+                is_active boolean not null default true,
+                deleted_at TIMESTAMPTZ DEFAULT null,
             )
         ''')
         
@@ -31,10 +33,10 @@ async def setup_database_async():
                 receiver_acc TEXT NOT NULL,
                 receiver_username TEXT NOT NULL,
                 amount NUMERIC(15, 2) NOT NULL,
-                status TEXT DEFAULT 'pending',
-                date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                status TEXT not null DEFAULT 'pending',
+                date TIMESTAMPTZ not null DEFAULT CURRENT_TIMESTAMP,
                 note TEXT,
-                method TEXT DEFAULT 'internal_transfer'
+                method TEXT not null DEFAULT 'internal_transfer'
             )
         ''')
         

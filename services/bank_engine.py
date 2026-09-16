@@ -273,3 +273,5 @@ class Openaccount(Bank):
             return sql.IntegrityError()
         except:
             return "An internal system error occured while creating account"
+import datetime
+print(datetime.datetime.now())
