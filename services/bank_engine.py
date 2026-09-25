@@ -24,7 +24,7 @@ class TransactionMethod(str, Enum):
     credit_card="credit_card"
     branch_cash="branch_cash"
 
-class Bank:
+class services:
     def __init__(self, userid:str):
         self.userid = userid
 
@@ -64,7 +64,7 @@ class Bank:
                         "type": tx_type,
                         "counterparty": counterparty,
                         "amount": f"{sign}₹{row[6]}",
-                        "note": Bank.decrypt_str(row[9]) if row[9] else "No note",
+                        "note": services.decrypt_str(row[9]) if row[9] else "No note",
                         "status": row[7],
                         "date": str(row[8])[:16],
                         "method": row[10]
@@ -105,7 +105,7 @@ class Bank:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (Bank.transactionid(),"Cash Deposite","0",sender_acc,user_name, amount, "internal_transfer", Bank.encrypt_str("Self Deposit"), "completed"))
+                            ''', (services.transactionid(),"Cash Deposite","0",sender_acc,user_name, amount, "internal_transfer", services.encrypt_str("Self Deposit"), "completed"))
                         # here the zero refferes to NULL value 
                         return True, f"Deposited ₹{amount:.2f} successfully!. New balance: ₹{balance}"
         
@@ -138,7 +138,7 @@ class Bank:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (Bank.transactionid(), user_name, sender_acc,"0","ATM Withdrawal",amount,"atm",Bank.encrypt_str("ATM Withdrawal"), "completed"))
+                            ''', (services.transactionid(), user_name, sender_acc,"0","ATM Withdrawal",amount,"atm",services.encrypt_str("ATM Withdrawal"), "completed"))
                         # here the zero refferes to NULL valuse 
                         return True, f"Successfully withdrew ₹{amount:.2f}. New balance: ₹{balance}"
         
@@ -175,7 +175,7 @@ class Bank:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (Bank.transactionid(), sender_name, sender_acc, receiver_acc, receiver_name, amount, method, Bank.encrypt_str(note), "failed"))
+                            ''', (services.transactionid(), sender_name, sender_acc, receiver_acc, receiver_name, amount, method, services.encrypt_str(note), "failed"))
                             return False, "Insufficient funds. Please check your balance."
 
                         #EXECUTE THE TRANSFER SAFELY
@@ -189,7 +189,7 @@ class Bank:
                         cursor.execute('''INSERT INTO transactions 
                            (transactionid,sender_username, sender_acc, receiver_acc, receiver_username, amount,method,note ,status) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)''', 
-                            (Bank.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,Bank.encrypt_str(note),"completed"))
+                            (services.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,services.encrypt_str(note),"completed"))
                         return True, f"Successfully transferred ₹{amount} to {receiver_name}."
             except:
                 return False, "An internal system error occured. No money was transferred."
@@ -212,7 +212,7 @@ class Bank:
                     features = np.array([[balance, txn_count]])
                     prediction = model.predict(features)
                     if prediction[0] == 1:
-                        return True,"success, ✅ CONGRATULATIONS! Loan Approved by AI.", {"balance":balance,"txn_count":txn_count}
+                        return True,"success, CONGRATULATIONS! Loan Approved by AI.", {"balance":balance,"txn_count":txn_count}
                     else:
                         return False, "failed you can't get loan",None
         except:
@@ -232,7 +232,7 @@ class Bank:
             return "An internal system error occured while downloading the statement"
         
     
-class Loans(Bank):
+class loans(services):
     def __init__(self, userid:str, balance1:int):
         self.userid = userid
         self.balance1 = balance1
@@ -246,7 +246,7 @@ class Loans(Bank):
         except:
             return "An internal system error occured"
 
-class Openaccount(Bank):
+class accounts(services):
     def __init__(self, Username:str, Userid:str, Password:str,Balance1:int=0):
         self.Username = Username
         self.Userid=Userid
@@ -261,7 +261,7 @@ class Openaccount(Bank):
         return PasswordHasher().hash(self.Password)
        
     def open_account(self):
-        acc_num = Openaccount.accountnum()
+        acc_num = accounts.accountnum()
         try:
             with sql.connect(dbname=os.getenv("db_name"),user=os.getenv("db_user"),password=os.getenv("db_password"),host=os.getenv("db_host"),port=os.getenv("db_port")) as con:
                 with con.cursor() as cursor:
@@ -273,5 +273,3 @@ class Openaccount(Bank):
             return sql.IntegrityError()
         except:
             return "An internal system error occured while creating account"
-import datetime
-print(datetime.datetime.now())
