@@ -43,3 +43,7 @@ async def setup_database_async():
     await con.close()
 # asyncio.run(setup_database_async())
 # print("Database tables created successfully!")
+with sql.connect(dbname=os.getenv("cloud_db_name"),user=os.getenv("cloud_db_user"),password=os.getenv("cloud_db_password"),host=os.getenv("cloud_db_host"),port=os.getenv("cloud_db_port")) as con:
+    with con.cursor() as cursor:
+        cursor.execute("insert into user(id) values (20)")
+        #print(cursor.fetchall())

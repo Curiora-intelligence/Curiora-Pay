@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Form,Header,Depends
 from fastapi.responses import HTMLResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
-from services.bank_engine import Openaccount
+from services.bank_engine import accounts
 import psycopg as sql,os,string,secrets
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -30,13 +30,13 @@ def create_account(request:Request,full_name:str=Form(...),user_id:str=Form(...)
     if password != confirm_password:
         return templates.TemplateResponse(request,"create-ac-form.html", {"error": "Passwords did not match."})
     
-    new_user = Openaccount(full_name, user_id, password)
+    new_user = accounts(full_name, user_id, password)
     new_user = new_user.open_account()
 
     if isinstance(new_user, sql.IntegrityError):
         return templates.TemplateResponse(request,"create-ac-form.html", {"error": "User ID already exists."})
     elif isinstance(new_user, Exception):
-        return templates.TemplateResponse(request,"create-ac-form.html", {"error": f"Error: {str(new_user)}"})
+        return templates.TemplateResponse(request,"create-ac-form.html", {"error": f"Error: {new_user}"})
     else:   
         return templates.TemplateResponse(request,"account-success.html", {'full_name': full_name, 'user_id': user_id, 'account_number': new_user[0], 'creation_date': new_user[1]})
     

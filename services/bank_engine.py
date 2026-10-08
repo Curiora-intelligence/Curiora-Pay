@@ -24,7 +24,7 @@ class TransactionMethod(str, Enum):
     credit_card="credit_card"
     branch_cash="branch_cash"
 
-class services:
+class BankServices:
     def __init__(self, userid:str):
         self.userid = userid
 
@@ -64,7 +64,7 @@ class services:
                         "type": tx_type,
                         "counterparty": counterparty,
                         "amount": f"{sign}₹{row[6]}",
-                        "note": services.decrypt_str(row[9]) if row[9] else "No note",
+                        "note": BankServices.decrypt_str(row[9]) if row[9] else "No note",
                         "status": row[7],
                         "date": str(row[8])[:16],
                         "method": row[10]
@@ -105,7 +105,7 @@ class services:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (services.transactionid(),"Cash Deposite","0",sender_acc,user_name, amount, "internal_transfer", services.encrypt_str("Self Deposit"), "completed"))
+                            ''', (BankServices.transactionid(),"Cash Deposite","0",sender_acc,user_name, amount, "internal_transfer", BankServices.encrypt_str("Self Deposit"), "completed"))
                         # here the zero refferes to NULL value 
                         return True, f"Deposited ₹{amount:.2f} successfully!. New balance: ₹{balance}"
         
@@ -138,7 +138,7 @@ class services:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (services.transactionid(), user_name, sender_acc,"0","ATM Withdrawal",amount,"atm",services.encrypt_str("ATM Withdrawal"), "completed"))
+                            ''', (BankServices.transactionid(), user_name, sender_acc,"0","ATM Withdrawal",amount,"atm",BankServices.encrypt_str("ATM Withdrawal"), "completed"))
                         # here the zero refferes to NULL valuse 
                         return True, f"Successfully withdrew ₹{amount:.2f}. New balance: ₹{balance}"
         
@@ -175,7 +175,7 @@ class services:
                             INSERT INTO transactions 
                             (transactionid, sender_username, sender_acc, receiver_acc, receiver_username, amount, method, note, status) 
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ''', (services.transactionid(), sender_name, sender_acc, receiver_acc, receiver_name, amount, method, services.encrypt_str(note), "failed"))
+                            ''', (BankServices.transactionid(), sender_name, sender_acc, receiver_acc, receiver_name, amount, method, BankServices.encrypt_str(note), "failed"))
                             return False, "Insufficient funds. Please check your balance."
 
                         #EXECUTE THE TRANSFER SAFELY
@@ -189,7 +189,7 @@ class services:
                         cursor.execute('''INSERT INTO transactions 
                            (transactionid,sender_username, sender_acc, receiver_acc, receiver_username, amount,method,note ,status) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)''', 
-                            (services.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,services.encrypt_str(note),"completed"))
+                            (BankServices.transactionid(),sender_name, sender_acc, receiver_acc, receiver_name, amount,method,BankServices.encrypt_str(note),"completed"))
                         return True, f"Successfully transferred ₹{amount} to {receiver_name}."
             except:
                 return False, "An internal system error occured. No money was transferred."
@@ -232,7 +232,7 @@ class services:
             return "An internal system error occured while downloading the statement"
         
     
-class loans(services):
+class loans(BankServices):
     def __init__(self, userid:str, balance1:int):
         self.userid = userid
         self.balance1 = balance1
@@ -246,7 +246,7 @@ class loans(services):
         except:
             return "An internal system error occured"
 
-class accounts(services):
+class accounts(BankServices):
     def __init__(self, Username:str, Userid:str, Password:str,Balance1:int=0):
         self.Username = Username
         self.Userid=Userid

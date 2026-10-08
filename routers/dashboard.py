@@ -4,7 +4,7 @@ from services import bank_engine
 import psycopg as sql,os
 from fastapi.templating import Jinja2Templates
 
-# 1. THE BOUNCER: Checks the VIP wristband (cookie) authorization
+#authorization 
 def get_current_user(request:Request):
     """Returns userid if they have session else None and redirect to home page"""
 
@@ -49,7 +49,7 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
                         "type": tx_type,
                         "counterparty": counterparty,
                         "amount": f"{sign}₹{row[6]}",
-                        "note": bank_engine.Bank.decrypt_str(row[9]),
+                        "note": bank_engine.BankServices.decrypt_str(row[9]),
                         "status": row[7],
                         "date": str(row[8])[:16],
                         "method": row[10]
@@ -71,12 +71,16 @@ def dashboard(request: Request,user_id:str=Depends(get_current_user)):
 #Transfer money route
 @dashboard_router.get("/transfer-money-form", response_class=HTMLResponse)
 def transfer_money_form(request: Request):
+
+    """return transfer money form"""
+
     return templates.TemplateResponse(request,"transfer-money-form.html",)
 
 @dashboard_router.post("/transfer-money", response_class=HTMLResponse)
 def transfer_money(request: Request,user_id: str = Depends(get_current_user), receiver_acc: str = Form(...),amount: float = Form(...),note: str = Form(None), method: bank_engine.TransactionMethod = Form(...)):
-    
-    user_bank = bank_engine.Bank(user_id)
+    """transfers the money to the users"""
+
+    user_bank = bank_engine.BankServices(user_id)
     success, message = user_bank.transfer(receiver_acc, amount, note, method)
     if not success:
         return templates.TemplateResponse(request,"transfer-money-form.html", {"error": message})
@@ -89,7 +93,7 @@ def deposit(request: Request):
 
 @dashboard_router.post("/deposite-money", response_class=HTMLResponse)
 def deposite_money(request: Request, amount: float = Form(...),user_id: str = Depends(get_current_user)):
-    user_bank = bank_engine.Bank(user_id)
+    user_bank = bank_engine.BankServices(user_id)
     success, message = user_bank.deposit_amount(amount)
     if not success:
         return templates.TemplateResponse(request,"deposite-money-form.html", {"error": message})
@@ -100,9 +104,9 @@ def deposite_money(request: Request, amount: float = Form(...),user_id: str = De
 def withdraw_money_form(request: Request):
     return templates.TemplateResponse(request,"withdraw-money-form.html")
 
-@dashboard_router.post("/withdraw-money", response_class=HTMLResponse)
+@dashboard_router.post("/withdraw-money",response_class=HTMLResponse)
 def withdraw_money(request: Request, user_id: str = Depends(get_current_user), amount: float = Form(...)):
-    user_bank = bank_engine.Bank(user_id)
+    user_bank = bank_engine.BankServices(user_id)
     success, message = user_bank.withdraw_amount(amount)
     if not success:
         return templates.TemplateResponse(request,"withdraw-money-form.html", {"error": message})
@@ -111,13 +115,13 @@ def withdraw_money(request: Request, user_id: str = Depends(get_current_user), a
 #AI loan approval route
 @dashboard_router.get("/apply-loan", response_class=HTMLResponse)
 def apply_loan(request: Request,user_id:str=Depends(get_current_user)):
-    user_bank = bank_engine.Bank(user_id)
+    user_bank = bank_engine.BankServices(user_id)
     status,message,user_data=user_bank.apply_for_loan()
     return templates.TemplateResponse(request,"loan-form.html", {"status":status,"message":message,"user_data":user_data})
 
 @dashboard_router.get("/download-satatement-form")
 def statement(request:Request,date_filter:str=None,userid=Depends(get_current_user)):
-    return HTMLResponse(bank_engine.Bank(userid).download_statement())
+    return HTMLResponse(bank_engine.BankServices(userid).download_statement())
 
 @dashboard_router.get("/transaction-history", response_class=HTMLResponse)
 def transaction_history(request:Request):
